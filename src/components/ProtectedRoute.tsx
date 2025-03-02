@@ -2,6 +2,8 @@
 import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -14,6 +16,8 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, loading, refreshSession } = useAuth();
   const [hasAttemptedRefresh, setHasAttemptedRefresh] = useState(false);
+  const [timeoutReached, setTimeoutReached] = useState(false);
+  const navigate = useNavigate();
 
   // Refresh session only once when component mounts
   useEffect(() => {
@@ -30,18 +34,28 @@ const ProtectedRoute = ({
     if (hasAttemptedRefresh && loading) {
       const timeout = setTimeout(() => {
         console.log("ProtectedRoute: Loading timed out, proceeding with current state");
+        setTimeoutReached(true);
       }, 3000); // 3 seconds timeout
 
       return () => clearTimeout(timeout);
     }
   }, [hasAttemptedRefresh, loading]);
 
-  // Show loading state, but only if we haven't attempted refresh yet
-  if (loading && !hasAttemptedRefresh) {
-    console.log("ProtectedRoute: Initial loading state");
+  // Show loading state, but only briefly
+  if (loading && !timeoutReached) {
+    console.log("ProtectedRoute: Loading state, hasAttemptedRefresh:", hasAttemptedRefresh);
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex flex-col min-h-screen items-center justify-center gap-4">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+        <p className="text-sm text-muted-foreground">Loading your account...</p>
+        {hasAttemptedRefresh && (
+          <Button 
+            variant="outline" 
+            onClick={() => setTimeoutReached(true)}
+          >
+            Continue anyway
+          </Button>
+        )}
       </div>
     );
   }

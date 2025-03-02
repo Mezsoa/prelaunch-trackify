@@ -1,5 +1,5 @@
 
-import { useState, useEffect, createContext, useContext } from 'react';
+import { useState, useEffect, createContext, useContext, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
@@ -28,9 +28,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   // Helper function to refresh the session
-  const refreshSession = async () => {
+  const refreshSession = useCallback(async () => {
     // Skip if already refreshing to prevent multiple calls
-    if (refreshing) return;
+    if (refreshing) {
+      console.log("AuthProvider: Already refreshing, skipping");
+      return;
+    }
     
     try {
       setRefreshing(true);
@@ -53,11 +56,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  };
+  }, [refreshing]);
 
+  // Initial session loading and auth state subscription
   useEffect(() => {
+    let isMounted = true;
+    
     // Get initial session
     const getInitialSession = async () => {
+      if (!isMounted) return;
+      
       setLoading(true);
       
       try {
@@ -69,21 +77,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setError(error.message);
         }
 
-        setSession(data.session);
-        setUser(data.session?.user ?? null);
+        if (isMounted) {
+          setSession(data.session);
+          setUser(data.session?.user ?? null);
         
-        // Ensure customer record exists
-        if (data.session?.user) {
-          try {
-            const customer = await getCustomer(data.session.user.id);
-            if (!customer && data.session.user.email) {
-              await createCustomer({
-                user_id: data.session.user.id,
-                email: data.session.user.email
-              });
+          // Ensure customer record exists
+          if (data.session?.user) {
+            try {
+              const customer = await getCustomer(data.session.user.id);
+              if (!customer && data.session.user.email) {
+                await createCustomer({
+                  user_id: data.session.user.id,
+                  email: data.session.user.email
+                });
+              }
+            } catch (err) {
+              console.error('Error ensuring customer record exists:', err);
             }
-          } catch (err) {
-            console.error('Error ensuring customer record exists:', err);
           }
         }
         
@@ -91,7 +101,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } catch (err) {
         console.error('Error in getInitialSession:', err);
       } finally {
-        setLoading(false);
+        if (isMounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -100,6 +112,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth subscription
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        if (!isMounted) return;
+        
         console.log('Auth state changed:', _event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
@@ -124,6 +138,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     );
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
     };
   }, []);
@@ -144,7 +159,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      await refreshSession();
+      // Manual refresh to ensure we have the latest session
+      setTimeout(() => refreshSession(), 300);
       toast.success('Signed in successfully!');
       navigate('/dashboard');
     } catch (err) {
