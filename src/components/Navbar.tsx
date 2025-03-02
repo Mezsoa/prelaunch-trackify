@@ -1,11 +1,15 @@
 
 import { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { ChevronRight, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/useAuth';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
   // Handle scroll effect
   useEffect(() => {
@@ -35,6 +39,15 @@ const Navbar = () => {
     }
   };
 
+  // Handle login/dashboard navigation
+  const handleAuth = () => {
+    if (user) {
+      navigate('/dashboard');
+    } else {
+      navigate('/login');
+    }
+  };
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -44,12 +57,12 @@ const Navbar = () => {
       }`}
     >
       <div className="container mx-auto px-4 flex justify-between items-center">
-        <a href="#" className="flex items-center gap-2">
+        <Link to="/" className="flex items-center gap-2">
           <div className="h-9 w-9 rounded-md bg-gradient-primary flex items-center justify-center">
             <span className="text-white font-bold text-xl">T</span>
           </div>
           <span className="font-medium text-xl">Trackify</span>
-        </a>
+        </Link>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8">
@@ -81,12 +94,40 @@ const Navbar = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            <Button variant="ghost" className="font-medium">
-              Log in
-            </Button>
-            <Button className="bg-trackify-600 hover:bg-trackify-700 text-white flex items-center gap-1 btn-hover-effect">
-              Get Started <ChevronRight className="h-4 w-4" />
-            </Button>
+            {user ? (
+              <>
+                <Button 
+                  variant="ghost" 
+                  className="font-medium"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="font-medium"
+                  onClick={signOut}
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost" 
+                  className="font-medium"
+                  onClick={() => navigate('/login')}
+                >
+                  Log in
+                </Button>
+                <Button 
+                  className="bg-trackify-600 hover:bg-trackify-700 text-white flex items-center gap-1 btn-hover-effect"
+                  onClick={() => navigate('/login')}
+                >
+                  Get Started <ChevronRight className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -132,12 +173,52 @@ const Navbar = () => {
           </button>
           
           <div className="mt-6 flex flex-col gap-4">
-            <Button variant="outline" className="w-full justify-center">
-              Log in
-            </Button>
-            <Button className="w-full justify-center bg-trackify-600 hover:bg-trackify-700">
-              Get Started
-            </Button>
+            {user ? (
+              <>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center"
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/dashboard');
+                  }}
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center"
+                  onClick={() => {
+                    setIsOpen(false);
+                    signOut();
+                  }}
+                >
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-center"
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/login');
+                  }}
+                >
+                  Log in
+                </Button>
+                <Button 
+                  className="w-full justify-center bg-trackify-600 hover:bg-trackify-700"
+                  onClick={() => {
+                    setIsOpen(false);
+                    navigate('/login');
+                  }}
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </div>
