@@ -25,13 +25,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
   
-  const [loading, setLoading] = useState(!user); // Only show loading if no user
+  const [loading, setLoading] = useState(true); // Always start with loading to check auth
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   // Helper function to update auth state
   const updateAuthState = useCallback((newSession: Session | null, newUser: User | null) => {
+    console.log('Updating auth state:', !!newSession, !!newUser);
     saveAuthState(newSession, newUser);
     setSession(newSession);
     setUser(newUser);
@@ -57,6 +58,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       updateAuthState(data.session, data.session?.user ?? null);
+      
+      // Ensure customer record exists if we have a user
+      if (data.session?.user) {
+        await ensureCustomerExists(data.session.user);
+      }
       
       console.log("AuthProvider: Session refreshed", !!data.session);
     } catch (err) {
@@ -84,12 +90,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const getInitialSession = async () => {
       if (!isMounted) return;
       
-      // If we already have a user from localStorage, don't show loading
-      if (user) {
-        setLoading(false);
-        return;
-      }
-      
       setLoading(true);
       
       try {
@@ -99,6 +99,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (error) {
           console.error('Error getting session:', error.message);
           setError(error.message);
+          setLoading(false);
+          return;
         }
 
         if (isMounted) {
@@ -124,10 +126,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth subscription
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
+      async (event, newSession) => {
         if (!isMounted) return;
         
-        console.log('Auth state changed:', _event, !!newSession);
+        console.log('Auth state changed:', event, !!newSession);
         updateAuthState(newSession, newSession?.user ?? null);
         
         // Create customer record on sign in/sign up
@@ -143,7 +145,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [updateAuthState, user]);
+  }, [updateAuthState]);
 
   return (
     <AuthContext.Provider

@@ -27,7 +27,6 @@ const ProtectedRoute = ({
     } else if (user) {
       // If we already have a user, no need to refresh or wait
       setHasAttemptedRefresh(true);
-      setTimeoutReached(true);
     }
   }, [refreshSession, hasAttemptedRefresh, user]);
 
@@ -37,15 +36,27 @@ const ProtectedRoute = ({
       const timeout = setTimeout(() => {
         console.log("ProtectedRoute: Loading timed out, proceeding with current state");
         setTimeoutReached(true);
-      }, 2000); // 2 seconds timeout (reduced from 3)
+      }, 2000); // 2 seconds timeout
 
       return () => clearTimeout(timeout);
     }
   }, [hasAttemptedRefresh, loading]);
 
+  // Check localStorage directly as a last resort if no user in context
+  const checkLocalStorage = () => {
+    if (!user) {
+      const savedUser = localStorage.getItem('auth_user');
+      if (savedUser) {
+        console.log("ProtectedRoute: User found in localStorage");
+        return true;
+      }
+    }
+    return !!user;
+  };
+
   // Show loading state, but only briefly
-  if (loading && !timeoutReached) {
-    console.log("ProtectedRoute: Loading state, hasAttemptedRefresh:", hasAttemptedRefresh);
+  if (loading && !timeoutReached && !checkLocalStorage()) {
+    console.log("ProtectedRoute: Loading state");
     return (
       <div className="flex flex-col min-h-screen items-center justify-center gap-4">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -62,15 +73,18 @@ const ProtectedRoute = ({
     );
   }
 
+  // First check context user, then localStorage as backup
+  const isAuthenticated = checkLocalStorage();
+
   // Redirect if not authenticated
-  if (!user) {
+  if (!isAuthenticated) {
     console.log("ProtectedRoute: No authenticated user, redirecting to", redirectTo);
     return <Navigate to={redirectTo} replace />;
   }
 
   // User is authenticated, render children
   console.log("ProtectedRoute: User authenticated, rendering children");
-  return children;
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

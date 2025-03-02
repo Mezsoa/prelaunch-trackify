@@ -29,12 +29,18 @@ export const createAuthActions = ({
       setLoading(true);
       setError(null);
       
-      const { error } = await signInWithEmail(email, password);
+      const { data, error } = await signInWithEmail(email, password);
 
       if (error) {
         setError(error.message);
         toast.error(error.message);
         return;
+      }
+      
+      // Update auth state immediately with the returned data
+      if (data?.user) {
+        updateAuthState(data.session, data.user);
+        await ensureCustomerExists(data.user);
       }
       
       // Manual refresh to ensure we have the latest session
@@ -55,12 +61,18 @@ export const createAuthActions = ({
       setLoading(true);
       setError(null);
       
-      const { error } = await signUpWithEmail(email, password);
+      const { data, error } = await signUpWithEmail(email, password);
 
       if (error) {
         setError(error.message);
         toast.error(error.message);
         return;
+      }
+      
+      // If sign up was successful and returned a user, update auth state
+      if (data?.user) {
+        updateAuthState(data.session, data.user);
+        await ensureCustomerExists(data.user);
       }
       
       toast.success('Signed up successfully! Please check your email for the confirmation link.');
