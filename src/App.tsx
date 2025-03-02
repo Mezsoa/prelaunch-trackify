@@ -10,8 +10,27 @@ import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import { useEffect } from "react";
+import { toast } from "@/components/ui/use-toast";
 
 const queryClient = new QueryClient();
+
+const SupabaseConfigCheck = () => {
+  useEffect(() => {
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    
+    if (!supabaseUrl || !supabaseAnonKey) {
+      toast({
+        title: "Development Mode",
+        description: "To enable authentication, create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY variables.",
+        duration: 10000,
+      });
+    }
+  }, []);
+  
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -20,6 +39,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
+          <SupabaseConfigCheck />
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/login" element={<Login />} />
