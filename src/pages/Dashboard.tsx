@@ -16,25 +16,31 @@ const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
   const { customer, loading: customerLoading } = useCustomer();
   const [refreshDiscounts, setRefreshDiscounts] = useState(0);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     document.title = 'Dashboard | Trackify';
     
     try {
       // Initialize session tracking
-      initializeTracking();
+      if (user) {
+        initializeTracking();
+      }
     } catch (error) {
       console.error("Error initializing tracking:", error);
     }
-  }, []);
+  }, [user]);
 
   // Handle sign out with better error handling
   const handleSignOut = async () => {
     try {
+      setIsSigningOut(true);
       await signOut();
+      // No need to navigate here as the signOut function in useAuth already handles navigation
     } catch (error) {
       console.error("Error signing out:", error);
       toast.error("Failed to sign out. Please try again.");
+      setIsSigningOut(false);
     }
   };
 
@@ -43,7 +49,7 @@ const Dashboard = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (loading || customerLoading) {
+  if (loading || customerLoading || isSigningOut) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -71,8 +77,8 @@ const Dashboard = () => {
             <div className="text-sm text-gray-700">
               {user?.email}
             </div>
-            <Button variant="outline" onClick={handleSignOut} size="sm">
-              Sign Out
+            <Button variant="outline" onClick={handleSignOut} size="sm" disabled={isSigningOut}>
+              {isSigningOut ? "Signing out..." : "Sign Out"}
             </Button>
           </div>
         </div>

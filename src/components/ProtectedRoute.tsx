@@ -22,6 +22,7 @@ const ProtectedRoute = ({
   }
 
   if (!user) {
+    console.log("No authenticated user, redirecting to", redirectTo);
     return <Navigate to={redirectTo} replace />;
   }
 

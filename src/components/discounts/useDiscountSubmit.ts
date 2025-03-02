@@ -19,13 +19,23 @@ export const useDiscountSubmit = (onSuccess?: () => void) => {
     
     try {
       console.log("Submitting discount with values:", values);
+      const discountAmount = typeof values.amount === 'string' 
+        ? parseFloat(values.amount) 
+        : values.amount;
+        
+      const maxUses = values.max_uses === '' 
+        ? null 
+        : (typeof values.max_uses === 'string' 
+            ? parseInt(values.max_uses) 
+            : values.max_uses);
+
       const result = await createDiscountRule({
         name: values.name,
         code: values.code,
         description: values.description || "",
-        amount: Number(values.amount),
+        amount: discountAmount,
         type: values.type,
-        max_uses: values.max_uses,
+        max_uses: maxUses,
         expires_at: values.expires_at,
         created_by: user.id,
         starts_at: new Date().toISOString(),

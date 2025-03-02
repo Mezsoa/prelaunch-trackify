@@ -26,6 +26,7 @@ const DiscountForm = ({ onSuccess }: DiscountFormProps) => {
       max_uses: null,
       expires_at: "",
     },
+    mode: "onChange",
   });
 
   const { handleSubmit, isSubmitting } = useDiscountSubmit(onSuccess);
