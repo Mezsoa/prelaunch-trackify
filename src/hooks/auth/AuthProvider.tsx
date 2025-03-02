@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Session, User } from "@supabase/supabase-js";
@@ -7,7 +8,6 @@ import {
   AUTH_SESSION_KEY,
   saveAuthState,
   ensureCustomerExists,
-  getSessionFromSupabase,
 } from "./authUtils";
 import { createAuthActions } from "./authActions";
 import { AuthContext } from "./AuthContext";
@@ -24,7 +24,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return savedUser ? JSON.parse(savedUser) : null;
   });
 
-  const [loading, setLoading] = useState(!user); // Only show loading if no user
+  const [loading, setLoading] = useState(true); // Always start with loading true
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
@@ -41,12 +41,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Helper function to refresh the session
   const refreshSession = useCallback(async () => {
-    // Skip if already refreshing
-    if (refreshing) {
-      console.log("AuthProvider: Already refreshing, skipping");
-      return;
-    }
-
     try {
       setRefreshing(true);
       console.log("AuthProvider: Refreshing session");
@@ -88,12 +82,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let isMounted = true;
 
     const getInitialSession = async () => {
-      // Skip if we already have a user and aren't refreshing
-      if (user && !refreshing) {
-        setLoading(false);
-        return;
-      }
-
       try {
         setLoading(true);
         const {
@@ -142,7 +130,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [user, refreshing, updateAuthState]); // Add dependencies
+  }, [updateAuthState]); // Remove dependencies that might cause re-runs
 
   return (
     <AuthContext.Provider

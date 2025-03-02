@@ -41,12 +41,12 @@ export const createAuthActions = ({
       if (data?.user) {
         updateAuthState(data.session, data.user);
         await ensureCustomerExists(data.user);
+        
+        // Navigate directly here rather than relying on useEffect
+        setTimeout(() => navigate('/dashboard'), 100);
       }
       
-      // Manual refresh to ensure we have the latest session
-      setTimeout(() => refreshSession(), 300);
       toast.success('Signed in successfully!');
-      navigate('/dashboard');
     } catch (err) {
       const error = err as Error;
       setError(error.message);
@@ -102,6 +102,8 @@ export const createAuthActions = ({
       updateAuthState(null, null);
       
       toast.success('Signed out successfully!');
+      
+      // Force navigation to home page after sign out
       navigate('/');
     } catch (err) {
       const error = err as Error;
