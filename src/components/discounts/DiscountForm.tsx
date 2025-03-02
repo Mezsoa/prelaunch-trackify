@@ -1,25 +1,49 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { createDiscountRule } from '@/lib/database';
-import { useAuth } from '@/hooks/useAuth';
-import { toast } from 'sonner';
+import React from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { createDiscountRule } from "@/lib/database";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const formSchema = z.object({
-  name: z.string().min(2, { message: 'Discount name must be at least 2 characters' }),
-  code: z.string().min(3, { message: 'Discount code must be at least 3 characters' })
-    .regex(/^[A-Z0-9_-]+$/, { message: 'Discount code can only contain uppercase letters, numbers, underscores, and hyphens' }),
+  name: z
+    .string()
+    .min(2, { message: "Discount name must be at least 2 characters" }),
+  code: z
+    .string()
+    .min(3, { message: "Discount code must be at least 3 characters" })
+    .regex(/^[A-Z0-9_-]+$/, {
+      message:
+        "Discount code can only contain uppercase letters, numbers, underscores, and hyphens",
+    }),
   description: z.string().optional(),
-  amount: z.number().positive({ message: 'Amount must be positive' }),
-  type: z.enum(['percentage', 'fixed']),
-  max_uses: z.string().transform(val => val ? parseInt(val) : undefined).optional(),
-  expires_at: z.string().optional().transform(val => val || undefined),
+  amount: z.coerce.number().positive({ message: "Amount must be positive" }),
+  type: z.enum(["percentage", "fixed"]),
+  max_uses: z.number().nullable().optional(),
+  expires_at: z
+    .string()
+    .optional()
+    .transform((val) => val || undefined),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -29,19 +53,19 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      code: '',
-      description: '',
+      name: "",
+      code: "",
+      description: "",
       amount: 0,
-      type: 'percentage',
-      max_uses: '',
-      expires_at: '',
+      type: "percentage",
+      max_uses: null,
+      expires_at: "",
     },
   });
 
   const onSubmit = async (values: FormValues) => {
     if (!user) {
-      toast.error('You must be logged in to create a discount');
+      toast.error("You must be logged in to create a discount");
       return;
     }
 
@@ -59,15 +83,15 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
       });
 
       if (result) {
-        toast.success('Discount code created successfully');
+        toast.success("Discount code created successfully");
         form.reset();
         if (onSuccess) onSuccess();
       } else {
-        toast.error('Failed to create discount code');
+        toast.error("Failed to create discount code");
       }
     } catch (error) {
-      console.error('Error creating discount:', error);
-      toast.error('An error occurred while creating the discount code');
+      console.error("Error creating discount:", error);
+      toast.error("An error occurred while creating the discount code");
     }
   };
 
@@ -96,7 +120,11 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             <FormItem>
               <FormLabel>Discount Code</FormLabel>
               <FormControl>
-                <Input placeholder="SUMMER2023" {...field} onChange={e => field.onChange(e.target.value.toUpperCase())} />
+                <Input
+                  placeholder="SUMMER2023"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+                />
               </FormControl>
               <FormDescription>Code that customers will enter</FormDescription>
               <FormMessage />
@@ -111,7 +139,10 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             <FormItem>
               <FormLabel>Description (Optional)</FormLabel>
               <FormControl>
-                <Textarea placeholder="Summer sale discount for new customers" {...field} />
+                <Textarea
+                  placeholder="Summer sale discount for new customers"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -126,16 +157,12 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
               <FormItem>
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input 
-                    type="number" 
-                    min="0" 
-                    step="0.01" 
-                    placeholder="10" 
-                    onChange={(e) => {
-                      const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
-                      field.onChange(value);
-                    }}
-                    value={field.value}
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    placeholder="10"
+                    {...field}
                   />
                 </FormControl>
                 <FormMessage />
@@ -149,7 +176,10 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Discount Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select discount type" />
@@ -197,7 +227,9 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
           />
         </div>
 
-        <Button type="submit" className="w-full">Create Discount Code</Button>
+        <Button type="submit" className="w-full">
+          Create Discount Code
+        </Button>
       </form>
     </Form>
   );

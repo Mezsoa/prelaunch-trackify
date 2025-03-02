@@ -1,10 +1,16 @@
-
-import React, { useEffect, useState } from 'react';
-import { getDiscountRules } from '@/lib/database';
-import type { DiscountRule } from '@/lib/database-schema';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useEffect, useState } from "react";
+import { getDiscountRules } from "@/lib/database";
+import type { DiscountRule } from "@/lib/database-schema";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 const DiscountList = () => {
   const [discounts, setDiscounts] = useState<DiscountRule[]>([]);
@@ -16,8 +22,8 @@ const DiscountList = () => {
         const discountRules = await getDiscountRules();
         setDiscounts(discountRules);
       } catch (error) {
-        console.error('Error fetching discounts:', error);
-        toast.error('Failed to load discount codes');
+        console.error("Error fetching discounts:", error);
+        toast.error("Failed to load discount codes");
       } finally {
         setLoading(false);
       }
@@ -55,18 +61,35 @@ const DiscountList = () => {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {discounts.map((discount) => (
-        <Card key={discount.id} className={`${isExpired(discount) || isFullyUsed(discount) ? 'opacity-70' : ''}`}>
+        <Card
+          key={discount.id}
+          className={`${
+            isExpired(discount) || isFullyUsed(discount) ? "opacity-70" : ""
+          }`}
+        >
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle>{discount.name}</CardTitle>
-              <Badge variant={isExpired(discount) || isFullyUsed(discount) ? "outline" : "default"}>
-                {discount.type === 'percentage' ? `${discount.amount}%` : `$${discount.amount.toFixed(2)}`}
+              <Badge
+                variant={
+                  isExpired(discount) || isFullyUsed(discount)
+                    ? "outline"
+                    : "default"
+                }
+              >
+                {discount.type === "percentage"
+                  ? `${discount.amount}%`
+                  : `$${discount.amount.toFixed(2)}`}
               </Badge>
             </div>
-            <CardDescription>Code: <span className="font-mono">{discount.code}</span></CardDescription>
+            <CardDescription>
+              Code: <span className="font-mono">{discount.code}</span>
+            </CardDescription>
           </CardHeader>
           <CardContent className="text-sm">
-            {discount.description && <p className="mb-2">{discount.description}</p>}
+            {discount.description && (
+              <p className="mb-2">{discount.description}</p>
+            )}
             <div className="flex flex-wrap gap-2 mt-2">
               {isExpired(discount) && (
                 <Badge variant="destructive">Expired</Badge>
