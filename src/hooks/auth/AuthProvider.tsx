@@ -1,17 +1,16 @@
-
-import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
-import { 
-  AUTH_USER_KEY, 
-  AUTH_SESSION_KEY, 
-  saveAuthState, 
+import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Session, User } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
+import {
+  AUTH_USER_KEY,
+  AUTH_SESSION_KEY,
+  saveAuthState,
   ensureCustomerExists,
-  getSessionFromSupabase
-} from './authUtils';
-import { createAuthActions } from './authActions';
-import { AuthContext } from './AuthContext';
+  getSessionFromSupabase,
+} from "./authUtils";
+import { createAuthActions } from "./authActions";
+import { AuthContext } from "./AuthContext";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Initialize state from localStorage if available
@@ -19,57 +18,59 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const savedSession = localStorage.getItem(AUTH_SESSION_KEY);
     return savedSession ? JSON.parse(savedSession) : null;
   });
-  
+
   const [user, setUser] = useState<User | null>(() => {
     const savedUser = localStorage.getItem(AUTH_USER_KEY);
     return savedUser ? JSON.parse(savedUser) : null;
   });
-  
-  const [loading, setLoading] = useState(true); // Always start with loading to check auth
+
+  const [loading, setLoading] = useState(!user); // Only show loading if no user
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   // Helper function to update auth state
-  const updateAuthState = useCallback((newSession: Session | null, newUser: User | null) => {
-    console.log('Updating auth state:', !!newSession, !!newUser);
-    saveAuthState(newSession, newUser);
-    setSession(newSession);
-    setUser(newUser);
-  }, []);
+  const updateAuthState = useCallback(
+    (newSession: Session | null, newUser: User | null) => {
+      saveAuthState(newSession, newUser);
+      setSession(newSession);
+      setUser(newUser);
+    },
+    []
+  );
 
   // Helper function to refresh the session
   const refreshSession = useCallback(async () => {
-    // Skip if already refreshing to prevent multiple calls
+    // Skip if already refreshing
     if (refreshing) {
       console.log("AuthProvider: Already refreshing, skipping");
       return;
     }
-    
+
     try {
       setRefreshing(true);
       console.log("AuthProvider: Refreshing session");
-      const { data, error } = await getSessionFromSupabase();
-      
-      if (error) {
-        console.error('Error refreshing session:', error.message);
-        setError(error.message);
-        return;
-      }
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
 
-      updateAuthState(data.session, data.session?.user ?? null);
-      
-      // Ensure customer record exists if we have a user
-      if (data.session?.user) {
-        await ensureCustomerExists(data.session.user);
+      if (error) throw error;
+
+      if (session?.user) {
+        updateAuthState(session, session.user);
+      } else {
+        // Clear auth state if no session
+        updateAuthState(null, null);
       }
-      
-      console.log("AuthProvider: Session refreshed", !!data.session);
-    } catch (err) {
-      console.error('Error in refreshSession:', err);
+    } catch (error) {
+      console.error("Error refreshing session:", error);
+      setError(
+        error instanceof Error ? error.message : "Session refresh failed"
+      );
     } finally {
-      setLoading(false);
       setRefreshing(false);
+      setLoading(false);
     }
   }, [refreshing, updateAuthState]);
 
@@ -79,42 +80,40 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setLoading,
     setError,
     refreshSession,
-    navigate
+    navigate,
   });
 
-  // Initial session loading and auth state subscription
+  // Initial session loading
   useEffect(() => {
     let isMounted = true;
-    
-    // Get initial session
+
     const getInitialSession = async () => {
-      if (!isMounted) return;
-      
-      setLoading(true);
-      
+      // Skip if we already have a user and aren't refreshing
+      if (user && !refreshing) {
+        setLoading(false);
+        return;
+      }
+
       try {
-        console.log("AuthProvider: Getting initial session");
-        const { data, error } = await getSessionFromSupabase();
-        
-        if (error) {
-          console.error('Error getting session:', error.message);
-          setError(error.message);
-          setLoading(false);
-          return;
-        }
+        setLoading(true);
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSession();
+
+        if (error) throw error;
 
         if (isMounted) {
-          updateAuthState(data.session, data.session?.user ?? null);
-        
-          // Ensure customer record exists
-          if (data.session?.user) {
-            await ensureCustomerExists(data.session.user);
+          if (session?.user) {
+            updateAuthState(session, session.user);
+            await ensureCustomerExists(session.user);
+          } else {
+            // Clear auth state if no session
+            updateAuthState(null, null);
           }
         }
-        
-        console.log("AuthProvider: Initial session loaded", !!data.session);
-      } catch (err) {
-        console.error('Error in getInitialSession:', err);
+      } catch (error) {
+        console.error("Error getting initial session:", error);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -125,27 +124,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     getInitialSession();
 
     // Set up auth subscription
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        if (!isMounted) return;
-        
-        console.log('Auth state changed:', event, !!newSession);
-        updateAuthState(newSession, newSession?.user ?? null);
-        
-        // Create customer record on sign in/sign up
-        if (newSession?.user) {
-          await ensureCustomerExists(newSession.user);
-        }
-        
-        setLoading(false);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
+
+      if (session?.user) {
+        updateAuthState(session, session.user);
+        await ensureCustomerExists(session.user);
+      } else {
+        updateAuthState(null, null);
       }
-    );
+      setLoading(false);
+    });
 
     return () => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [updateAuthState]);
+  }, [user, refreshing, updateAuthState]); // Add dependencies
 
   return (
     <AuthContext.Provider

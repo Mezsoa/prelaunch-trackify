@@ -1,26 +1,48 @@
-
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(false);
-  const { signIn, signUp, loading } = useAuth();
+  const { signIn, signUp, loading, user } = useAuth();
+  const navigate = useNavigate();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (user) {
+      navigate("/dashboard");
+    }
+  }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (isSignUp) {
-      await signUp(email, password);
-    } else {
-      await signIn(email, password);
+
+    try {
+      if (isSignUp) {
+        await signUp(email, password);
+        toast.success("Please check your email for verification link");
+      } else {
+        await signIn(email, password);
+        // Navigation is handled in authActions.ts after successful login
+      }
+    } catch (error) {
+      toast.error("Authentication failed. Please try again.");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background">
@@ -33,12 +55,12 @@ const Login = () => {
             <span className="font-medium text-xl">Trackify</span>
           </Link>
           <h1 className="text-2xl font-semibold tracking-tight">
-            {isSignUp ? 'Create an account' : 'Welcome back'}
+            {isSignUp ? "Create an account" : "Welcome back"}
           </h1>
           <p className="text-sm text-muted-foreground">
             {isSignUp
-              ? 'Enter your email below to create your account'
-              : 'Enter your email to sign in to your account'}
+              ? "Enter your email below to create your account"
+              : "Enter your email to sign in to your account"}
           </p>
         </div>
 
@@ -74,11 +96,7 @@ const Login = () => {
                 className="bg-trackify-600 hover:bg-trackify-700 w-full"
                 disabled={loading}
               >
-                {loading
-                  ? 'Loading...'
-                  : isSignUp
-                  ? 'Sign Up'
-                  : 'Sign In'}
+                {loading ? "Loading..." : isSignUp ? "Sign Up" : "Sign In"}
               </Button>
             </div>
           </form>
@@ -89,8 +107,8 @@ const Login = () => {
               onClick={() => setIsSignUp(!isSignUp)}
             >
               {isSignUp
-                ? 'Already have an account? Sign in'
-                : 'Don\'t have an account? Sign up'}
+                ? "Already have an account? Sign in"
+                : "Don't have an account? Sign up"}
             </button>
           </div>
         </div>

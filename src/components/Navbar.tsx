@@ -1,9 +1,8 @@
-
-import { useState, useEffect } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronRight, Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import { ChevronRight, Menu, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -22,9 +21,9 @@ const Navbar = () => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
     return () => {
-      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -39,8 +38,8 @@ const Navbar = () => {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
+        behavior: "smooth",
+        block: "start",
       });
     }
   };
@@ -49,7 +48,7 @@ const Navbar = () => {
   const handleDashboardClick = () => {
     console.log("Dashboard clicked, current user:", user);
     setIsOpen(false);
-    navigate('/dashboard');
+    navigate("/dashboard");
   };
 
   // Handle sign out
@@ -66,18 +65,18 @@ const Navbar = () => {
   // Handle login
   const handleLogin = () => {
     setIsOpen(false);
-    navigate('/login');
+    navigate("/login");
   };
 
-  // Only show the dashboard button on the home page
-  const showDashboardButton = location.pathname === '/';
+  // Only show the dashboard button on all pages except the dashboard
+  const showDashboardButton = location.pathname !== "/dashboard";
 
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? 'py-3 backdrop-blur-md bg-white/80 shadow-sm'
-          : 'py-5 bg-transparent'
+          ? "py-3 backdrop-blur-md bg-white/80 shadow-sm"
+          : "py-5 bg-transparent"
       }`}
     >
       <div className="container mx-auto px-4 flex justify-between items-center">
@@ -92,25 +91,25 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-8">
           <div className="flex gap-6">
             <button
-              onClick={() => scrollToSection('features')}
+              onClick={() => scrollToSection("features")}
               className="text-gray-600 hover:text-trackify-600 transition-colors"
             >
               Features
             </button>
             <button
-              onClick={() => scrollToSection('how-it-works')}
+              onClick={() => scrollToSection("how-it-works")}
               className="text-gray-600 hover:text-trackify-600 transition-colors"
             >
               How it Works
             </button>
             <button
-              onClick={() => scrollToSection('pricing')}
+              onClick={() => scrollToSection("pricing")}
               className="text-gray-600 hover:text-trackify-600 transition-colors"
             >
               Pricing
             </button>
             <button
-              onClick={() => scrollToSection('faq')}
+              onClick={() => scrollToSection("faq")}
               className="text-gray-600 hover:text-trackify-600 transition-colors"
             >
               FAQ
@@ -121,16 +120,16 @@ const Navbar = () => {
             {user ? (
               <>
                 {showDashboardButton && (
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="font-medium"
                     onClick={handleDashboardClick}
                   >
                     Dashboard
                   </Button>
                 )}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="font-medium"
                   onClick={handleSignOut}
                 >
@@ -139,14 +138,14 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="font-medium"
                   onClick={handleLogin}
                 >
                   Log in
                 </Button>
-                <Button 
+                <Button
                   className="bg-trackify-600 hover:bg-trackify-700 text-white flex items-center gap-1 btn-hover-effect"
                   onClick={handleLogin}
                 >
@@ -169,49 +168,49 @@ const Navbar = () => {
       {/* Mobile Menu */}
       <div
         className={`fixed inset-0 bg-white z-40 transform transition-transform duration-300 ease-in-out ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+          isOpen ? "translate-x-0" : "translate-x-full"
         } md:hidden pt-24 px-6`}
       >
         <div className="flex flex-col gap-6 text-lg">
           <button
-            onClick={() => scrollToSection('features')}
+            onClick={() => scrollToSection("features")}
             className="py-3 border-b border-gray-100 text-left"
           >
             Features
           </button>
           <button
-            onClick={() => scrollToSection('how-it-works')}
+            onClick={() => scrollToSection("how-it-works")}
             className="py-3 border-b border-gray-100 text-left"
           >
             How it Works
           </button>
           <button
-            onClick={() => scrollToSection('pricing')}
+            onClick={() => scrollToSection("pricing")}
             className="py-3 border-b border-gray-100 text-left"
           >
             Pricing
           </button>
           <button
-            onClick={() => scrollToSection('faq')}
+            onClick={() => scrollToSection("faq")}
             className="py-3 border-b border-gray-100 text-left"
           >
             FAQ
           </button>
-          
+
           <div className="mt-6 flex flex-col gap-4">
             {user ? (
               <>
                 {showDashboardButton && (
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     className="w-full justify-center"
                     onClick={handleDashboardClick}
                   >
                     Dashboard
                   </Button>
                 )}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full justify-center"
                   onClick={handleSignOut}
                 >
@@ -220,14 +219,14 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full justify-center"
                   onClick={handleLogin}
                 >
                   Log in
                 </Button>
-                <Button 
+                <Button
                   className="w-full justify-center bg-trackify-600 hover:bg-trackify-700"
                   onClick={handleLogin}
                 >
