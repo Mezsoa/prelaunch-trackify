@@ -16,7 +16,7 @@ const formSchema = z.object({
   code: z.string().min(3, { message: 'Discount code must be at least 3 characters' })
     .regex(/^[A-Z0-9_-]+$/, { message: 'Discount code can only contain uppercase letters, numbers, underscores, and hyphens' }),
   description: z.string().optional(),
-  amount: z.coerce.number().positive({ message: 'Amount must be positive' }),
+  amount: z.number().positive({ message: 'Amount must be positive' }),
   type: z.enum(['percentage', 'fixed']),
   max_uses: z.string().transform(val => val ? parseInt(val) : undefined).optional(),
   expires_at: z.string().optional().transform(val => val || undefined),
@@ -131,8 +131,10 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
                     min="0" 
                     step="0.01" 
                     placeholder="10" 
-                    {...field}
-                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? 0 : parseFloat(e.target.value);
+                      field.onChange(value);
+                    }}
                     value={field.value}
                   />
                 </FormControl>
