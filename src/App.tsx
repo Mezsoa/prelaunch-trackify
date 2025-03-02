@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { useEffect } from "react";
 import { toast } from "@/components/ui/use-toast";
+import { initializeTracking } from "./lib/tracking";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +28,9 @@ const SupabaseConfigCheck = () => {
           "To enable authentication, create a .env file with VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY variables.",
         duration: 10000,
       });
+    } else {
+      // Initialize tracking when Supabase is configured
+      initializeTracking();
     }
   }, []);
 

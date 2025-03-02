@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { getCustomer, createCustomer } from '@/lib/database';
 
 export type AuthContextType = {
   session: Session | null;
@@ -38,6 +39,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       setSession(data.session);
       setUser(data.session?.user ?? null);
+      
+      // Ensure customer record exists
+      if (data.session?.user) {
+        try {
+          const customer = await getCustomer(data.session.user.id);
+          if (!customer && data.session.user.email) {
+            await createCustomer({
+              user_id: data.session.user.id,
+              email: data.session.user.email
+            });
+          }
+        } catch (err) {
+          console.error('Error ensuring customer record exists:', err);
+        }
+      }
+      
       setLoading(false);
     };
 
@@ -45,9 +62,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth subscription
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
+      async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
+        
+        // Create customer record on sign in/sign up
+        if (session?.user) {
+          try {
+            const customer = await getCustomer(session.user.id);
+            if (!customer && session.user.email) {
+              await createCustomer({
+                user_id: session.user.id,
+                email: session.user.email
+              });
+            }
+          } catch (err) {
+            console.error('Error creating customer record:', err);
+          }
+        }
+        
         setLoading(false);
       }
     );

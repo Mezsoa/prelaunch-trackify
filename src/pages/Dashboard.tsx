@@ -1,16 +1,25 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
+import { useCustomer } from '@/hooks/useCustomer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Users, BarChart3, TagIcon } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import DiscountForm from '@/components/discounts/DiscountForm';
+import DiscountList from '@/components/discounts/DiscountList';
+import { initializeTracking } from '@/lib/tracking';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
+  const { customer, loading: customerLoading } = useCustomer();
+  const [refreshDiscounts, setRefreshDiscounts] = useState(0);
 
   useEffect(() => {
     document.title = 'Dashboard | Trackify';
+    // Initialize session tracking
+    initializeTracking();
   }, []);
 
   // Redirect if not logged in
@@ -18,7 +27,7 @@ const Dashboard = () => {
     return <Navigate to="/login" replace />;
   }
 
-  if (loading) {
+  if (loading || customerLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -26,13 +35,17 @@ const Dashboard = () => {
     );
   }
 
+  const handleDiscountCreated = () => {
+    setRefreshDiscounts(prev => prev + 1);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Dashboard header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-md bg-gradient-primary flex items-center justify-center">
+            <div className="h-8 w-8 rounded-md bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
               <span className="text-white font-bold text-base">T</span>
             </div>
             <span className="font-medium text-lg">Trackify</span>
@@ -51,7 +64,23 @@ const Dashboard = () => {
 
       {/* Dashboard content */}
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold mb-6">Dashboard</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>Create Discount</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[600px]">
+              <DialogHeader>
+                <DialogTitle>Create New Discount Code</DialogTitle>
+                <DialogDescription>
+                  Create a new discount code for your customers.
+                </DialogDescription>
+              </DialogHeader>
+              <DiscountForm onSuccess={handleDiscountCreated} />
+            </DialogContent>
+          </Dialog>
+        </div>
         
         <Tabs defaultValue="customers" className="w-full">
           <TabsList className="mb-6">
@@ -76,18 +105,21 @@ const Dashboard = () => {
           <TabsContent value="customers" className="p-6 bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold mb-4">Customer Tracking</h2>
             <p className="text-gray-600 mb-4">
-              Your pre-login customer tracking dashboard will appear here. Connect your Shopify store to get started.
+              {customer 
+                ? `Welcome back, ${customer.first_name || customer.email}!` 
+                : 'Your customer profile is being created.'}
             </p>
-            <Button className="bg-trackify-600 hover:bg-trackify-700">
+            <Button className="bg-blue-600 hover:bg-blue-700">
               Connect Shopify Store
             </Button>
           </TabsContent>
           
           <TabsContent value="discounts" className="p-6 bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold mb-4">Discount Management</h2>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mb-6">
               Create and manage discount codes for your pre-launch or crowdfunding customers.
             </p>
+            <DiscountList key={refreshDiscounts} />
           </TabsContent>
           
           <TabsContent value="analytics" className="p-6 bg-white rounded-lg shadow-sm">
