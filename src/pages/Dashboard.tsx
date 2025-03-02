@@ -1,10 +1,11 @@
 
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCustomer } from '@/hooks/useCustomer';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Settings, Users, BarChart3, TagIcon } from 'lucide-react';
+import { Settings, Users, BarChart3, TagIcon, Home } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import DiscountForm from '@/components/discounts/DiscountForm';
 import DiscountList from '@/components/discounts/DiscountList';
@@ -92,6 +93,12 @@ const Dashboard = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <Link to="/">
+              <Button variant="outline" size="sm" className="flex items-center gap-2">
+                <Home className="h-4 w-4" />
+                <span>Back to Home</span>
+              </Button>
+            </Link>
             <div className="text-sm text-gray-700">
               {user?.email}
             </div>

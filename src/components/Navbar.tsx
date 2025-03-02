@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ChevronRight, Menu, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -10,6 +10,7 @@ const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const { user, signOut, refreshSession } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Handle scroll effect
   useEffect(() => {
@@ -68,6 +69,9 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  // Only show the dashboard button on the home page
+  const showDashboardButton = location.pathname === '/';
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -116,13 +120,15 @@ const Navbar = () => {
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <Button 
-                  variant="ghost" 
-                  className="font-medium"
-                  onClick={handleDashboardClick}
-                >
-                  Dashboard
-                </Button>
+                {showDashboardButton && (
+                  <Button 
+                    variant="ghost" 
+                    className="font-medium"
+                    onClick={handleDashboardClick}
+                  >
+                    Dashboard
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   className="font-medium"
@@ -195,13 +201,15 @@ const Navbar = () => {
           <div className="mt-6 flex flex-col gap-4">
             {user ? (
               <>
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-center"
-                  onClick={handleDashboardClick}
-                >
-                  Dashboard
-                </Button>
+                {showDashboardButton && (
+                  <Button 
+                    variant="outline" 
+                    className="w-full justify-center"
+                    onClick={handleDashboardClick}
+                  >
+                    Dashboard
+                  </Button>
+                )}
                 <Button 
                   variant="outline" 
                   className="w-full justify-center"
