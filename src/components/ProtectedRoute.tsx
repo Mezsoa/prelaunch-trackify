@@ -1,4 +1,5 @@
 
+import { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -11,10 +12,16 @@ const ProtectedRoute = ({
   children, 
   redirectTo = '/login' 
 }: ProtectedRouteProps) => {
-  const { user, loading } = useAuth();
+  const { user, loading, refreshSession } = useAuth();
 
-  // Only show loading state for a brief period
+  // Refresh session when component mounts
+  useEffect(() => {
+    refreshSession();
+  }, [refreshSession]);
+
+  // Show loading state
   if (loading) {
+    console.log("ProtectedRoute: Loading state");
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -22,12 +29,14 @@ const ProtectedRoute = ({
     );
   }
 
+  // Redirect if not authenticated
   if (!user) {
-    console.log("No authenticated user, redirecting to", redirectTo);
+    console.log("ProtectedRoute: No authenticated user, redirecting to", redirectTo);
     return <Navigate to={redirectTo} replace />;
   }
 
-  // Return children directly without wrapping in a fragment
+  // User is authenticated, render children
+  console.log("ProtectedRoute: User authenticated, rendering children");
   return children;
 };
 

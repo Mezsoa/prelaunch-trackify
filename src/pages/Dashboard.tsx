@@ -12,10 +12,15 @@ import { initializeTracking } from '@/lib/tracking';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, refreshSession } = useAuth();
   const { customer, loading: customerLoading } = useCustomer();
   const [refreshDiscounts, setRefreshDiscounts] = useState(0);
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  // Refresh session when component mounts
+  useEffect(() => {
+    refreshSession();
+  }, [refreshSession]);
 
   useEffect(() => {
     document.title = 'Dashboard | Trackify';
@@ -45,7 +50,7 @@ const Dashboard = () => {
 
   // Early return for loading states with console logging for debugging
   if (loading) {
-    console.log("Auth loading state is true");
+    console.log("Dashboard: Auth loading state is true");
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -55,12 +60,12 @@ const Dashboard = () => {
 
   // Only check if user exists - if not, the ProtectedRoute component will handle the redirect
   if (!user) {
-    console.log("No user found in Dashboard component");
+    console.log("Dashboard: No user found in Dashboard component");
     return null;
   }
 
   if (customerLoading || isSigningOut) {
-    console.log("Customer loading or signing out");
+    console.log("Dashboard: Customer loading or signing out");
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -72,7 +77,7 @@ const Dashboard = () => {
     setRefreshDiscounts(prev => prev + 1);
   };
 
-  console.log("Rendering dashboard content");
+  console.log("Dashboard: Rendering dashboard content for user", user.email);
   
   return (
     <div className="min-h-screen bg-gray-50">

@@ -14,6 +14,7 @@ export type AuthContextType = {
   signOut: () => Promise<void>;
   loading: boolean;
   error: string | null;
+  refreshSession: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,6 +25,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+
+  // Helper function to refresh the session
+  const refreshSession = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) {
+        console.error('Error refreshing session:', error.message);
+        setError(error.message);
+        return;
+      }
+
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error in refreshSession:', err);
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     // Get initial session
@@ -63,6 +86,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Set up auth subscription
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
+        console.log('Auth state changed:', _event, !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
@@ -106,6 +130,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
+      await refreshSession();
       toast.success('Signed in successfully!');
       navigate('/dashboard');
     } catch (err) {
@@ -156,6 +181,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
+      // Clear user and session state
+      setUser(null);
+      setSession(null);
+      
       toast.success('Signed out successfully!');
       navigate('/');
     } catch (err) {
@@ -177,6 +206,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         signOut,
         loading,
         error,
+        refreshSession,
       }}
     >
       {children}

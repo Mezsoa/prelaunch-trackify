@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, signOut, refreshSession } = useAuth();
   const navigate = useNavigate();
 
   // Handle scroll effect
@@ -27,6 +27,11 @@ const Navbar = () => {
     };
   }, []);
 
+  // Refresh auth session when navbar mounts
+  useEffect(() => {
+    refreshSession();
+  }, [refreshSession]);
+
   // Smooth scroll to section
   const scrollToSection = (id: string) => {
     setIsOpen(false);
@@ -40,12 +45,27 @@ const Navbar = () => {
   };
 
   // Handle login/dashboard navigation
-  const handleAuth = () => {
-    if (user) {
-      navigate('/dashboard');
-    } else {
-      navigate('/login');
+  const handleDashboardClick = () => {
+    console.log("Dashboard clicked, current user:", user);
+    setIsOpen(false);
+    navigate('/dashboard');
+  };
+
+  // Handle sign out
+  const handleSignOut = async () => {
+    setIsOpen(false);
+    try {
+      await signOut();
+      console.log("Sign out completed");
+    } catch (error) {
+      console.error("Error signing out:", error);
     }
+  };
+
+  // Handle login
+  const handleLogin = () => {
+    setIsOpen(false);
+    navigate('/login');
   };
 
   return (
@@ -99,14 +119,14 @@ const Navbar = () => {
                 <Button 
                   variant="ghost" 
                   className="font-medium"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={handleDashboardClick}
                 >
                   Dashboard
                 </Button>
                 <Button 
                   variant="outline" 
                   className="font-medium"
-                  onClick={signOut}
+                  onClick={handleSignOut}
                 >
                   Sign Out
                 </Button>
@@ -116,13 +136,13 @@ const Navbar = () => {
                 <Button 
                   variant="ghost" 
                   className="font-medium"
-                  onClick={() => navigate('/login')}
+                  onClick={handleLogin}
                 >
                   Log in
                 </Button>
                 <Button 
                   className="bg-trackify-600 hover:bg-trackify-700 text-white flex items-center gap-1 btn-hover-effect"
-                  onClick={() => navigate('/login')}
+                  onClick={handleLogin}
                 >
                   Get Started <ChevronRight className="h-4 w-4" />
                 </Button>
@@ -178,20 +198,14 @@ const Navbar = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-center"
-                  onClick={() => {
-                    setIsOpen(false);
-                    navigate('/dashboard');
-                  }}
+                  onClick={handleDashboardClick}
                 >
                   Dashboard
                 </Button>
                 <Button 
                   variant="outline" 
                   className="w-full justify-center"
-                  onClick={() => {
-                    setIsOpen(false);
-                    signOut();
-                  }}
+                  onClick={handleSignOut}
                 >
                   Sign Out
                 </Button>
@@ -201,19 +215,13 @@ const Navbar = () => {
                 <Button 
                   variant="outline" 
                   className="w-full justify-center"
-                  onClick={() => {
-                    setIsOpen(false);
-                    navigate('/login');
-                  }}
+                  onClick={handleLogin}
                 >
                   Log in
                 </Button>
                 <Button 
                   className="w-full justify-center bg-trackify-600 hover:bg-trackify-700"
-                  onClick={() => {
-                    setIsOpen(false);
-                    navigate('/login');
-                  }}
+                  onClick={handleLogin}
                 >
                   Get Started
                 </Button>
