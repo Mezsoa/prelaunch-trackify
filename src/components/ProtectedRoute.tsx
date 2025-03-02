@@ -13,9 +13,6 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  // First check context user, then localStorage as backup
-  const isAuthenticated = checkLocalStorage();
-
   if (!user) {
     // Redirect to login while saving the attempted location
     return <Navigate to="/login" state={{ from: location }} replace />;
