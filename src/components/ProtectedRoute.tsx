@@ -34,13 +34,24 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 
         // If not, try to get session from Supabase directly (only once)
         if (!user && checkCount === 0) {
+          console.log("Checking Supabase session directly");
+          
+          // Make sure supabase client is available
+          if (!supabase || !supabase.auth) {
+            console.error("Supabase client not properly initialized");
+            toast.error("Authentication service is not available");
+            setIsAuthenticated(false);
+            setIsCheckingAuth(false);
+            return;
+          }
+          
           const { data, error } = await supabase.auth.getSession();
           
           if (error) {
             console.error("Session check error:", error);
             toast.error("Authentication error. Please log in again.");
             setIsAuthenticated(false);
-          } else if (data.session) {
+          } else if (data?.session) {
             console.log("Valid session found in Supabase");
             // We found a valid session, refresh our auth context
             await refreshSession();
