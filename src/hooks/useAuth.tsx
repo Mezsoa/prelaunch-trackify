@@ -17,15 +17,45 @@ export type AuthContextType = {
   refreshSession: () => Promise<void>;
 };
 
+const AUTH_USER_KEY = 'auth_user';
+const AUTH_SESSION_KEY = 'auth_session';
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-  const [session, setSession] = useState<Session | null>(null);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize state from localStorage if available
+  const [session, setSession] = useState<Session | null>(() => {
+    const savedSession = localStorage.getItem(AUTH_SESSION_KEY);
+    return savedSession ? JSON.parse(savedSession) : null;
+  });
+  
+  const [user, setUser] = useState<User | null>(() => {
+    const savedUser = localStorage.getItem(AUTH_USER_KEY);
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+  
+  const [loading, setLoading] = useState(!user); // Only show loading if no user
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
+
+  // Helper function to save auth state to localStorage
+  const saveAuthState = useCallback((newSession: Session | null, newUser: User | null) => {
+    if (newSession) {
+      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(newSession));
+    } else {
+      localStorage.removeItem(AUTH_SESSION_KEY);
+    }
+    
+    if (newUser) {
+      localStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser));
+    } else {
+      localStorage.removeItem(AUTH_USER_KEY);
+    }
+    
+    setSession(newSession);
+    setUser(newUser);
+  }, []);
 
   // Helper function to refresh the session
   const refreshSession = useCallback(async () => {
@@ -46,8 +76,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
+      saveAuthState(data.session, data.session?.user ?? null);
       
       console.log("AuthProvider: Session refreshed", !!data.session);
     } catch (err) {
@@ -56,7 +85,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
       setRefreshing(false);
     }
-  }, [refreshing]);
+  }, [refreshing, saveAuthState]);
 
   // Initial session loading and auth state subscription
   useEffect(() => {
@@ -65,6 +94,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Get initial session
     const getInitialSession = async () => {
       if (!isMounted) return;
+      
+      // If we already have a user from localStorage, don't show loading
+      if (user) {
+        setLoading(false);
+        return;
+      }
       
       setLoading(true);
       
@@ -78,8 +113,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         }
 
         if (isMounted) {
-          setSession(data.session);
-          setUser(data.session?.user ?? null);
+          saveAuthState(data.session, data.session?.user ?? null);
         
           // Ensure customer record exists
           if (data.session?.user) {
@@ -111,21 +145,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Set up auth subscription
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      async (_event, newSession) => {
         if (!isMounted) return;
         
-        console.log('Auth state changed:', _event, !!session);
-        setSession(session);
-        setUser(session?.user ?? null);
+        console.log('Auth state changed:', _event, !!newSession);
+        saveAuthState(newSession, newSession?.user ?? null);
         
         // Create customer record on sign in/sign up
-        if (session?.user) {
+        if (newSession?.user) {
           try {
-            const customer = await getCustomer(session.user.id);
-            if (!customer && session.user.email) {
+            const customer = await getCustomer(newSession.user.id);
+            if (!customer && newSession.user.email) {
               await createCustomer({
-                user_id: session.user.id,
-                email: session.user.email
+                user_id: newSession.user.id,
+                email: newSession.user.email
               });
             }
           } catch (err) {
@@ -141,7 +174,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [saveAuthState, user]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -211,9 +244,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
       
-      // Clear user and session state
-      setUser(null);
-      setSession(null);
+      // Clear user and session state and localStorage
+      saveAuthState(null, null);
       
       toast.success('Signed out successfully!');
       navigate('/');

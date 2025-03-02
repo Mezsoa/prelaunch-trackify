@@ -1,9 +1,8 @@
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,17 +16,20 @@ const ProtectedRoute = ({
   const { user, loading, refreshSession } = useAuth();
   const [hasAttemptedRefresh, setHasAttemptedRefresh] = useState(false);
   const [timeoutReached, setTimeoutReached] = useState(false);
-  const navigate = useNavigate();
 
   // Refresh session only once when component mounts
   useEffect(() => {
-    if (!hasAttemptedRefresh) {
+    if (!hasAttemptedRefresh && !user) {
       console.log("ProtectedRoute: Attempting to refresh session");
       refreshSession().finally(() => {
         setHasAttemptedRefresh(true);
       });
+    } else if (user) {
+      // If we already have a user, no need to refresh or wait
+      setHasAttemptedRefresh(true);
+      setTimeoutReached(true);
     }
-  }, [refreshSession, hasAttemptedRefresh]);
+  }, [refreshSession, hasAttemptedRefresh, user]);
 
   // After refresh attempt and still loading for too long, just proceed with what we have
   useEffect(() => {
@@ -35,7 +37,7 @@ const ProtectedRoute = ({
       const timeout = setTimeout(() => {
         console.log("ProtectedRoute: Loading timed out, proceeding with current state");
         setTimeoutReached(true);
-      }, 3000); // 3 seconds timeout
+      }, 2000); // 2 seconds timeout (reduced from 3)
 
       return () => clearTimeout(timeout);
     }
