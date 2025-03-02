@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -13,15 +13,32 @@ const ProtectedRoute = ({
   redirectTo = '/login' 
 }: ProtectedRouteProps) => {
   const { user, loading, refreshSession } = useAuth();
+  const [hasAttemptedRefresh, setHasAttemptedRefresh] = useState(false);
 
-  // Refresh session when component mounts
+  // Refresh session only once when component mounts
   useEffect(() => {
-    refreshSession();
-  }, [refreshSession]);
+    if (!hasAttemptedRefresh) {
+      console.log("ProtectedRoute: Attempting to refresh session");
+      refreshSession().finally(() => {
+        setHasAttemptedRefresh(true);
+      });
+    }
+  }, [refreshSession, hasAttemptedRefresh]);
 
-  // Show loading state
-  if (loading) {
-    console.log("ProtectedRoute: Loading state");
+  // After refresh attempt and still loading for too long, just proceed with what we have
+  useEffect(() => {
+    if (hasAttemptedRefresh && loading) {
+      const timeout = setTimeout(() => {
+        console.log("ProtectedRoute: Loading timed out, proceeding with current state");
+      }, 3000); // 3 seconds timeout
+
+      return () => clearTimeout(timeout);
+    }
+  }, [hasAttemptedRefresh, loading]);
+
+  // Show loading state, but only if we haven't attempted refresh yet
+  if (loading && !hasAttemptedRefresh) {
+    console.log("ProtectedRoute: Initial loading state");
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>

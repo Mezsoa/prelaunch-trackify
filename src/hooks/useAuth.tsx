@@ -24,12 +24,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const navigate = useNavigate();
 
   // Helper function to refresh the session
   const refreshSession = async () => {
+    // Skip if already refreshing to prevent multiple calls
+    if (refreshing) return;
+    
     try {
-      setLoading(true);
+      setRefreshing(true);
+      console.log("AuthProvider: Refreshing session");
       const { data, error } = await supabase.auth.getSession();
       
       if (error) {
@@ -41,10 +46,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(data.session);
       setUser(data.session?.user ?? null);
       
-      setLoading(false);
+      console.log("AuthProvider: Session refreshed", !!data.session);
     } catch (err) {
       console.error('Error in refreshSession:', err);
+    } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -53,32 +60,39 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const getInitialSession = async () => {
       setLoading(true);
       
-      const { data, error } = await supabase.auth.getSession();
-      
-      if (error) {
-        console.error('Error getting session:', error.message);
-        setError(error.message);
-      }
-
-      setSession(data.session);
-      setUser(data.session?.user ?? null);
-      
-      // Ensure customer record exists
-      if (data.session?.user) {
-        try {
-          const customer = await getCustomer(data.session.user.id);
-          if (!customer && data.session.user.email) {
-            await createCustomer({
-              user_id: data.session.user.id,
-              email: data.session.user.email
-            });
-          }
-        } catch (err) {
-          console.error('Error ensuring customer record exists:', err);
+      try {
+        console.log("AuthProvider: Getting initial session");
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error.message);
+          setError(error.message);
         }
+
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+        
+        // Ensure customer record exists
+        if (data.session?.user) {
+          try {
+            const customer = await getCustomer(data.session.user.id);
+            if (!customer && data.session.user.email) {
+              await createCustomer({
+                user_id: data.session.user.id,
+                email: data.session.user.email
+              });
+            }
+          } catch (err) {
+            console.error('Error ensuring customer record exists:', err);
+          }
+        }
+        
+        console.log("AuthProvider: Initial session loaded", !!data.session);
+      } catch (err) {
+        console.error('Error in getInitialSession:', err);
+      } finally {
+        setLoading(false);
       }
-      
-      setLoading(false);
     };
 
     getInitialSession();

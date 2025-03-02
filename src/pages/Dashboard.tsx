@@ -13,15 +13,16 @@ import { initializeTracking } from '@/lib/tracking';
 import { toast } from 'sonner';
 
 const Dashboard = () => {
-  const { user, loading, signOut, refreshSession } = useAuth();
+  const { user, loading: authLoading, signOut, refreshSession } = useAuth();
   const { customer, loading: customerLoading } = useCustomer();
   const [refreshDiscounts, setRefreshDiscounts] = useState(0);
   const [isSigningOut, setIsSigningOut] = useState(false);
 
-  // Refresh session when component mounts
+  // Refresh session only once on mount
   useEffect(() => {
+    console.log("Dashboard: Refreshing session on mount");
     refreshSession();
-  }, [refreshSession]);
+  }, []);
 
   useEffect(() => {
     document.title = 'Dashboard | Trackify';
@@ -29,6 +30,7 @@ const Dashboard = () => {
     try {
       // Initialize session tracking only if we have a user
       if (user) {
+        console.log("Dashboard: Initializing tracking for user", user.email);
         initializeTracking();
       }
     } catch (error) {
@@ -49,9 +51,11 @@ const Dashboard = () => {
     }
   };
 
+  console.log("Dashboard: Auth loading:", authLoading, "Customer loading:", customerLoading, "User:", !!user);
+
   // Early return for loading states with console logging for debugging
-  if (loading) {
-    console.log("Dashboard: Auth loading state is true");
+  if (authLoading) {
+    console.log("Dashboard: Auth is still loading");
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
