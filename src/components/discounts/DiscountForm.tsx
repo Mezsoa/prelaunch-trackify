@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -33,7 +32,7 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
       name: '',
       code: '',
       description: '',
-      amount: '',
+      amount: 0,
       type: 'percentage',
       max_uses: '',
       expires_at: '',
@@ -51,7 +50,7 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
         name: values.name,
         code: values.code,
         description: values.description,
-        amount: values.amount, // This is now correctly typed as a number
+        amount: values.amount,
         type: values.type,
         max_uses: values.max_uses,
         expires_at: values.expires_at,

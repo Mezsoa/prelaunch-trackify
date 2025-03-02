@@ -62,10 +62,8 @@ export const initializeTracking = async () => {
   // Listen for auth state changes to link sessions to customers
   supabase.auth.onAuthStateChange((event, session) => {
     if (event === 'SIGNED_IN' && session?.user) {
-      // If we have an existing session and a user signs in, update the session
+      // If we have an existing session and a user signs in, end it and start a new one
       if (currentSessionId) {
-        // We need to update the database.ts file to support updating customer_id
-        // For now, let's just end the current session and start a new one
         endTrackingSession().then(() => {
           startTrackingSession(session.user.id);
         });
