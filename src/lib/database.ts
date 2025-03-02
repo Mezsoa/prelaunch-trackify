@@ -132,7 +132,7 @@ export const createTrackingSession = async (session: Omit<TrackingSession, 'id' 
   return data;
 };
 
-export const updateTrackingSession = async (id: string, session: Partial<Omit<TrackingSession, 'id' | 'customer_id' | 'created_at'>>): Promise<TrackingSession | null> => {
+export const updateTrackingSession = async (id: string, session: Partial<Omit<TrackingSession, 'id' | 'created_at'>>): Promise<TrackingSession | null> => {
   const { data, error } = await supabase
     .from('tracking_sessions')
     .update(session)

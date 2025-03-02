@@ -64,8 +64,10 @@ export const initializeTracking = async () => {
     if (event === 'SIGNED_IN' && session?.user) {
       // If we have an existing session and a user signs in, update the session
       if (currentSessionId) {
-        updateTrackingSession(currentSessionId, {
-          customer_id: session.user.id,
+        // We need to update the database.ts file to support updating customer_id
+        // For now, let's just end the current session and start a new one
+        endTrackingSession().then(() => {
+          startTrackingSession(session.user.id);
         });
       } else {
         // Start a new session if there isn't one
