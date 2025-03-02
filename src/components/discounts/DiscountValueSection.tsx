@@ -3,19 +3,19 @@ import React from "react";
 import { Control } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { DiscountFormValues } from "./DiscountFormSchema";
 
 interface DiscountValueSectionProps {
@@ -32,7 +32,7 @@ export const DiscountValueSection: React.FC<DiscountValueSectionProps> = ({
         name="amount"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Amount</FormLabel>
+            <FormLabel>Discount Amount</FormLabel>
             <FormControl>
               <Input
                 type="number"
@@ -58,7 +58,11 @@ export const DiscountValueSection: React.FC<DiscountValueSectionProps> = ({
         render={({ field }) => (
           <FormItem>
             <FormLabel>Discount Type</FormLabel>
-            <Select onValueChange={field.onChange} defaultValue={field.value}>
+            <Select
+              onValueChange={field.onChange}
+              defaultValue={field.value}
+              value={field.value}
+            >
               <FormControl>
                 <SelectTrigger>
                   <SelectValue placeholder="Select discount type" />

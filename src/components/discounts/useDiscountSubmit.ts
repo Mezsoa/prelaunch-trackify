@@ -12,17 +12,18 @@ export const useDiscountSubmit = (onSuccess?: () => void) => {
   const handleSubmit = async (values: DiscountFormValues) => {
     if (!user) {
       toast.error("You must be logged in to create a discount");
-      return;
+      return false;
     }
 
     setIsSubmitting(true);
     
     try {
+      console.log("Submitting discount with values:", values);
       const result = await createDiscountRule({
         name: values.name,
         code: values.code,
-        description: values.description,
-        amount: values.amount,
+        description: values.description || "",
+        amount: Number(values.amount),
         type: values.type,
         max_uses: values.max_uses,
         expires_at: values.expires_at,

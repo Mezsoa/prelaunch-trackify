@@ -13,9 +13,14 @@ export const discountFormSchema = z.object({
         "Discount code can only contain uppercase letters, numbers, underscores, and hyphens",
     }),
   description: z.string().optional(),
-  amount: z.coerce.number().positive({ message: "Amount must be positive" }),
+  amount: z.coerce
+    .number()
+    .positive({ message: "Amount must be positive" }),
   type: z.enum(["percentage", "fixed"]),
-  max_uses: z.coerce.number().nullable().optional(),
+  max_uses: z.coerce
+    .number()
+    .nullable()
+    .optional(),
   expires_at: z
     .string()
     .optional()

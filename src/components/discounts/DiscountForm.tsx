@@ -31,6 +31,7 @@ const DiscountForm = ({ onSuccess }: DiscountFormProps) => {
   const { handleSubmit, isSubmitting } = useDiscountSubmit(onSuccess);
 
   const onSubmit = async (values: DiscountFormValues) => {
+    console.log("Form values before submission:", values);
     const success = await handleSubmit(values);
     if (success) {
       form.reset();

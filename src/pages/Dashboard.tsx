@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import DiscountForm from '@/components/discounts/DiscountForm';
 import DiscountList from '@/components/discounts/DiscountList';
 import { initializeTracking } from '@/lib/tracking';
+import { toast } from 'sonner';
 
 const Dashboard = () => {
   const { user, loading, signOut } = useAuth();
@@ -18,9 +19,24 @@ const Dashboard = () => {
 
   useEffect(() => {
     document.title = 'Dashboard | Trackify';
-    // Initialize session tracking
-    initializeTracking();
+    
+    try {
+      // Initialize session tracking
+      initializeTracking();
+    } catch (error) {
+      console.error("Error initializing tracking:", error);
+    }
   }, []);
+
+  // Handle sign out with better error handling
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+      toast.error("Failed to sign out. Please try again.");
+    }
+  };
 
   // Redirect if not logged in
   if (!loading && !user) {
@@ -55,7 +71,7 @@ const Dashboard = () => {
             <div className="text-sm text-gray-700">
               {user?.email}
             </div>
-            <Button variant="outline" onClick={signOut} size="sm">
+            <Button variant="outline" onClick={handleSignOut} size="sm">
               Sign Out
             </Button>
           </div>
