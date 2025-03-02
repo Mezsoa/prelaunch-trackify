@@ -1,6 +1,5 @@
 
 import { useEffect, useState } from 'react';
-import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCustomer } from '@/hooks/useCustomer';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,7 @@ const Dashboard = () => {
     document.title = 'Dashboard | Trackify';
     
     try {
-      // Initialize session tracking
+      // Initialize session tracking only if we have a user
       if (user) {
         initializeTracking();
       }
@@ -44,12 +43,24 @@ const Dashboard = () => {
     }
   };
 
-  // Redirect if not logged in
-  if (!loading && !user) {
-    return <Navigate to="/login" replace />;
+  // Early return for loading states with console logging for debugging
+  if (loading) {
+    console.log("Auth loading state is true");
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+      </div>
+    );
   }
 
-  if (loading || customerLoading || isSigningOut) {
+  // Only check if user exists - if not, the ProtectedRoute component will handle the redirect
+  if (!user) {
+    console.log("No user found in Dashboard component");
+    return null;
+  }
+
+  if (customerLoading || isSigningOut) {
+    console.log("Customer loading or signing out");
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -61,6 +72,8 @@ const Dashboard = () => {
     setRefreshDiscounts(prev => prev + 1);
   };
 
+  console.log("Rendering dashboard content");
+  
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Dashboard header */}

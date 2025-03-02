@@ -13,6 +13,7 @@ const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
 
+  // Only show loading state for a brief period
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -26,7 +27,8 @@ const ProtectedRoute = ({
     return <Navigate to={redirectTo} replace />;
   }
 
-  return <>{children}</>;
+  // Return children directly without wrapping in a fragment
+  return children;
 };
 
 export default ProtectedRoute;
