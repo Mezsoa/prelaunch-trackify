@@ -1,5 +1,6 @@
+
 import { createClient } from "@supabase/supabase-js";
-import { toast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 
 // Initialize Supabase client
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -25,31 +26,26 @@ if (!supabaseUrl || !supabaseAnonKey) {
   }
 }
 
-// Create a dummy client for development when credentials are missing
-const dummyClient = {
-  auth: {
-    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-    signInWithPassword: () =>
-      Promise.resolve({
-        data: null,
-        error: new Error("Supabase not configured"),
-      }),
-    signUp: () =>
-      Promise.resolve({
-        data: null,
-        error: new Error("Supabase not configured"),
-      }),
-    signOut: () => Promise.resolve({ error: null }),
-    onAuthStateChange: () => ({
-      data: { subscription: { unsubscribe: () => {} } },
-      error: null,
-    }),
-  },
-};
-
-// Create and export the Supabase client (or a dummy client if env vars are missing)
-export const supabase =
-  supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : dummyClient; // Type assertion to make TypeScript happy
+export const supabase = supabaseUrl && supabaseAnonKey
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : {
+      auth: {
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+        signInWithPassword: () =>
+          Promise.resolve({
+            data: null,
+            error: new Error("Supabase not configured"),
+          }),
+        signUp: () =>
+          Promise.resolve({
+            data: null,
+            error: new Error("Supabase not configured"),
+          }),
+        signOut: () => Promise.resolve({ error: null }),
+        onAuthStateChange: () => ({
+          data: { subscription: { unsubscribe: () => {} } },
+          error: null,
+        }),
+      },
+    };

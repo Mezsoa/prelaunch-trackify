@@ -1,4 +1,3 @@
-
 import { toast } from 'sonner';
 import { User } from '@supabase/supabase-js';
 import { 
@@ -42,11 +41,13 @@ export const createAuthActions = ({
         updateAuthState(data.session, data.user);
         await ensureCustomerExists(data.user);
         
-        // Navigate directly here rather than relying on useEffect
-        setTimeout(() => navigate('/dashboard'), 100);
+        toast.success('Signed in successfully!');
+        
+        // Small delay to allow state updates to propagate
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 200);
       }
-      
-      toast.success('Signed in successfully!');
     } catch (err) {
       const error = err as Error;
       setError(error.message);
@@ -104,7 +105,9 @@ export const createAuthActions = ({
       toast.success('Signed out successfully!');
       
       // Force navigation to home page after sign out
-      navigate('/');
+      setTimeout(() => {
+        navigate('/');
+      }, 100);
     } catch (err) {
       const error = err as Error;
       setError(error.message);

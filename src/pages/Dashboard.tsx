@@ -19,23 +19,25 @@ import { initializeTracking } from "@/lib/tracking";
 import { toast } from "sonner";
 
 const Dashboard = () => {
-  const { user, loading: authLoading, signOut, refreshSession } = useAuth();
+  const { user, loading: authLoading, signOut } = useAuth();
   const { customer, loading: customerLoading } = useCustomer();
   const [refreshDiscounts, setRefreshDiscounts] = useState(0);
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [trackingInitialized, setTrackingInitialized] = useState(false);
 
   useEffect(() => {
     document.title = "Dashboard | Trackify";
-    refreshSession();
-
-    if (user) {
+    
+    if (user && !trackingInitialized) {
       try {
         initializeTracking();
+        setTrackingInitialized(true);
       } catch (error) {
+        console.error("Failed to initialize tracking:", error);
         toast.error("Failed to initialize tracking");
       }
     }
-  }, [user, refreshSession]);
+  }, [user, trackingInitialized]);
 
   const handleSignOut = async () => {
     try {
@@ -66,7 +68,6 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Dashboard header */}
       <header className="bg-white border-b border-gray-200 shadow-sm">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -100,7 +101,6 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Dashboard content */}
       <div className="container mx-auto px-4 py-8">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-2xl font-bold">Dashboard</h1>
