@@ -3,17 +3,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 import { 
   AUTH_USER_KEY, 
   AUTH_SESSION_KEY, 
   saveAuthState, 
   ensureCustomerExists,
-  signInWithEmail,
-  signUpWithEmail,
-  signOutUser,
   getSessionFromSupabase
 } from './authUtils';
+import { createAuthActions } from './authActions';
 import { AuthContext } from './AuthContext';
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -69,6 +66,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setRefreshing(false);
     }
   }, [refreshing, updateAuthState]);
+
+  // Create auth actions
+  const { signIn, signUp, signOut } = createAuthActions({
+    updateAuthState,
+    setLoading,
+    setError,
+    refreshSession,
+    navigate
+  });
 
   // Initial session loading and auth state subscription
   useEffect(() => {
@@ -138,82 +144,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       subscription.unsubscribe();
     };
   }, [updateAuthState, user]);
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { error } = await signInWithEmail(email, password);
-
-      if (error) {
-        setError(error.message);
-        toast.error(error.message);
-        return;
-      }
-      
-      // Manual refresh to ensure we have the latest session
-      setTimeout(() => refreshSession(), 300);
-      toast.success('Signed in successfully!');
-      navigate('/dashboard');
-    } catch (err) {
-      const error = err as Error;
-      setError(error.message);
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signUp = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { error } = await signUpWithEmail(email, password);
-
-      if (error) {
-        setError(error.message);
-        toast.error(error.message);
-        return;
-      }
-      
-      toast.success('Signed up successfully! Please check your email for the confirmation link.');
-    } catch (err) {
-      const error = err as Error;
-      setError(error.message);
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signOut = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const { error } = await signOutUser();
-      
-      if (error) {
-        setError(error.message);
-        toast.error(error.message);
-        return;
-      }
-      
-      // Clear user and session state and localStorage
-      updateAuthState(null, null);
-      
-      toast.success('Signed out successfully!');
-      navigate('/');
-    } catch (err) {
-      const error = err as Error;
-      setError(error.message);
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <AuthContext.Provider
