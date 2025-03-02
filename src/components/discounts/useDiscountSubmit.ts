@@ -23,7 +23,8 @@ export const useDiscountSubmit = (onSuccess?: () => void) => {
         ? parseFloat(values.amount) 
         : values.amount;
         
-      const maxUses = values.max_uses === '' 
+      // Fix the type comparison error
+      const maxUses = values.max_uses === null 
         ? null 
         : (typeof values.max_uses === 'string' 
             ? parseInt(values.max_uses) 
