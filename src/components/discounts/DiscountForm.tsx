@@ -126,7 +126,15 @@ const DiscountForm = ({ onSuccess }: { onSuccess?: () => void }) => {
               <FormItem>
                 <FormLabel>Amount</FormLabel>
                 <FormControl>
-                  <Input type="number" min="0" step="0.01" placeholder="10" {...field} />
+                  <Input 
+                    type="number" 
+                    min="0" 
+                    step="0.01" 
+                    placeholder="10" 
+                    {...field}
+                    onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                    value={field.value}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
